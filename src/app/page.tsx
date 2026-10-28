@@ -1,15 +1,15 @@
-import Banner from "@/components/banner";
-import WhyChooseUs from "@/components/WhyChooseUs";
-import Testimonials from "@/components/Testimonials";
-import CTA from "@/components/CTA";
+import Banner from "@/components/banner"
+import CTA from "@/components/CTA"
+import Testimonials from "@/components/Testimonials"
+import WhyChooseUs from "@/components/WhyChooseUs"
 
 export default function Home() {
   return (
     <>
       <Banner />
       <WhyChooseUs/>
-      <Testimonials/>
+      <Testimonials />
       <CTA/>
     </>
-  );
+  )
 }

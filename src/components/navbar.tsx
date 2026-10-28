@@ -1,129 +1,184 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { MenuIcon, UserIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import Image from "next/image"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { MenuIcon, UserIcon, type LucideIcon } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
 import {
   Sheet,
   SheetClose,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
+} from "@/components/ui/sheet"
+import { cn } from "@/lib/utils"
 
-const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/destinations", label: "Destinations" },
-  { href: "/my-bookings", label: "My Bookings" },
-  { href: "/admin", label: "Admin" },
-];
+type NavLink = { label: string; href: string; icon?: LucideIcon }
 
-const authLinks = [
-  { href: "/profile", label: "Profile", withIcon: true },
-  { href: "/login", label: "Login", withIcon: false },
-  { href: "/signup", label: "Sign Up", withIcon: false },
-];
+const leftLinks: NavLink[] = [
+  { label: "Home", href: "/" },
+  { label: "Destinations", href: "/destinations" },
+  { label: "Add Destination", href: "/add-destination" },
+  { label: "Admin", href: "/admin" },
+]
 
-const linkClassName =
-  "text-[0.95rem] font-medium text-foreground transition-colors hover:text-brand";
+const rightLinks: NavLink[] = [
+  { label: "Profile", href: "/profile", icon: UserIcon },
+  { label: "Login", href: "/login" },
+  { label: "Sign Up", href: "/sign-up" },
+]
 
-function linkClassNameFor(href: string) {
+const mobileLinks: NavLink[] = [
+  ...leftLinks,
+  ...rightLinks.map(({ label, href }) => ({ label, href })),
+]
+
+/** "/" only matches itself; other paths also match their nested routes. */
+function isActivePath(pathname: string, href: string) {
   return href === "/"
-    ? `${linkClassName} border-b-2 border-brand pb-0.5 text-brand`
-    : linkClassName;
+    ? pathname === "/"
+    : pathname === href || pathname.startsWith(`${href}/`)
 }
 
-export default function Navbar() {
-  return (
-    <header className="sticky top-0 z-40 w-full bg-white shadow-sm">
-      <div className="relative mx-auto flex h-16 items-center justify-between px-4 md:px-8">
-        {/* Left navigation (desktop) */}
-        <nav className="hidden items-center gap-8 md:flex">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={linkClassNameFor(link.href)}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+function linkClassName(active: boolean) {
+  return cn(
+    "relative text-[16px] transition-colors",
+    active
+      ? "text-brand after:absolute after:inset-x-0 after:-bottom-[3px] after:h-px after:bg-brand"
+      : "text-[#111111] hover:text-brand",
+  )
+}
 
-        {/* Mobile menu trigger */}
+function rightLinkClassName(active: boolean) {
+  return cn(
+    "flex items-center gap-2 text-[16px] transition-colors hover:text-brand",
+    active ? "text-brand" : "text-[#111111]",
+  )
+}
+
+
+export function Navbar() {
+  const pathname = usePathname()
+  const profileActive = isActivePath(pathname, "/profile")
+
+  return (
+    <header>
+      <nav
+        aria-label="Main"
+        className="flex h-14 items-center justify-between bg-white px-[26px]"
+      >
+        {/* Left: primary links (desktop) */}
+        <ul className="hidden items-center gap-8 md:flex">
+          {leftLinks.map((link) => {
+            const active = isActivePath(pathname, link.href)
+            return (
+              <li key={link.label}>
+                <Link
+                  href={link.href}
+                  aria-current={active ? "page" : undefined}
+                  className={linkClassName(active)}
+                >
+                  {link.label}
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
+
+        {/* Left: mobile menu trigger */}
         <Sheet>
           <SheetTrigger
             render={
               <Button
                 variant="ghost"
-                size="icon"
-                className="md:hidden"
+                size="icon-lg"
                 aria-label="Open menu"
+                className="md:hidden"
               />
             }
           >
-            <MenuIcon className="size-5" />
+            <MenuIcon />
           </SheetTrigger>
-
-          <SheetContent>
+          <SheetContent side="left" className="w-72 font-system">
             <SheetHeader>
-              <SheetTitle className="text-2xl font-bold text-brand">
-                Wanderlast
-              </SheetTitle>
+              <SheetTitle className="sr-only">Navigation</SheetTitle>
+              <SheetDescription className="sr-only">
+                Browse Wanderlust
+              </SheetDescription>
             </SheetHeader>
-
-            <nav className="flex flex-col gap-1 px-4">
-              {navLinks.map((link, index) => (
-                <SheetClose
-                  key={index}
-                  render={<Link href={link.href} />}
-                  className={linkClassNameFor(link.href)}
-                >
-                  {link.label}
-                </SheetClose>
-              ))}
-            </nav>
-
-            <div className="mx-4 border-t border-border" />
-
-            <nav className="flex flex-col gap-1 px-4 pb-2">
-              {authLinks.map((link) => (
-                <SheetClose
-                  key={link.href}
-                  render={<Link href={link.href} />}
-                  className={`${linkClassName} flex items-center gap-2 py-1.5`}
-                >
-                  {link.withIcon && <UserIcon className="size-4" />}
-                  {link.label}
-                </SheetClose>
-              ))}
-            </nav>
+            <ul className="flex flex-col gap-5 px-6 pt-4 text-[16px]">
+              {mobileLinks.map((link) => {
+                const active = isActivePath(pathname, link.href)
+                return (
+                  <li key={link.label}>
+                    <SheetClose
+                      nativeButton={false}
+                      render={
+                        <Link
+                          href={link.href}
+                          aria-current={active ? "page" : undefined}
+                          className={linkClassName(active)}
+                        />
+                      }
+                    >
+                      {link.label}
+                    </SheetClose>
+                  </li>
+                )
+              })}
+            </ul>
           </SheetContent>
         </Sheet>
 
-        {/* Centered logo */}
-        <Link
-          href="/"
-          className="absolute left-1/2 -translate-x-1/2 text-2xl font-bold tracking-wide text-brand md:text-3xl"
-        >
-          Wanderlast
+        {/* Center: logo */}
+        <Link href="/" aria-label="Wanderlust home" className="shrink-0">
+          <Image
+            src="/images/Wanderlast.png"
+            alt="Wanderlust"
+            width={162}
+            height={24}
+            priority
+          />
         </Link>
 
-        {/* Right navigation (desktop) */}
-        <nav className="hidden items-center gap-8 md:flex">
-          {authLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`${linkClassName} flex items-center gap-1.5`}
-            >
-              {link.withIcon && <UserIcon className="size-4" />}
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-      </div>
+        {/* Right: account links (desktop) */}
+        <ul className="hidden items-center gap-8 md:flex">
+          {rightLinks.map(({ label, href, icon: Icon }) => {
+            const active = isActivePath(pathname, href)
+            return (
+              <li key={label}>
+                <Link
+                  href={href}
+                  aria-current={active ? "page" : undefined}
+                  className={rightLinkClassName(active)}
+                >
+                  {Icon ? <Icon aria-hidden="true" className="size-4" /> : null}
+                  {label}
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
+
+        {/* Right: mobile profile link */}
+        <Link
+          href="/profile"
+          aria-label="Profile"
+          aria-current={profileActive ? "page" : undefined}
+          className={cn(
+            "md:hidden",
+            profileActive ? "text-brand" : "text-[#111111]",
+          )}
+        >
+          <UserIcon className="size-6" aria-hidden="true" />
+        </Link>
+      </nav>
     </header>
-  );
+  )
 }
+
+export default Navbar
